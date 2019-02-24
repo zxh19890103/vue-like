@@ -1,0 +1,15 @@
+<h3 class="haha" title>
+    hi {{title}}
+</h3>
+<div>
+    <p :title="title" style="color:#989889">
+        This is a Vue-like web framework.
+        <a href="javascript:void(0);" @click="handleClick">Hit here</a>
+    </p>
+    <input :value="title" @change="handleChange"/>
+    <Who :name="title"/>
+</div>
+<p @click="handleClick">
+    Who are you is not the point.
+    The point is {{title}}
+</p>
