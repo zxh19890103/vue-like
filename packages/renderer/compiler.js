@@ -7,6 +7,7 @@ function compile(template) {
         ignoreAttributes: false,
         allowBooleanAttributes: true
     })
+    console.log('fast-xml-parser', ojson)
     const tree = parseChildren(ojson)
     return tree
 }
@@ -15,15 +16,22 @@ function createElement(key, val) {
     const charCode = key.charCodeAt(0)
     const type = charCode > 64 && charCode < 91 ? 2 : 1
     const element = {
-        type,
-        tag: key,
-        props: null,
-        children: null
+        type, // 1 =  host element；2 = 自定义组件
+        tag: key, // 标签，对于host element，是 HTML 标签；对于component，是首字母大写自定义标签
+        props: null, // 外部输入
+        children: null, // 子元素
+        slots: null, // 组件内容分发
+        ref: null // host 元素 或者 component 实例 或者 虚拟 组件（if、text、loop等）
     }
     if (key !== 'Text') {
         element.props = parseAttrs(val['#attrs'])
-        element.children = parseChildren(val)
+        if (type === 1) {
+            element.children = parseChildren(val)
+        } else {
+            element.slots = parseChildren(val)
+        }
     } else {
+        // 这个是文本节点，文本节点不包含任何子节点
         const attrs = {}
         if (/^{{\w+}}$/.test(val)) {
             attrs[':value'] = val.substr(2, val.length - 4)
@@ -58,9 +66,16 @@ function parseAttrs(attrs) {
             realKey = key
             group = groups.attrs
         }
-        group[realKey] = attrs[key]
+        group[realKey] = convertExpression(attrs[key])
     }
     return groups
+}
+
+function convertExpression(express) {
+    if (express === 'true') return true
+    else if (express === 'false') return false
+    else if (/^\d+$/.test(express)) return eval(express)
+    else return express
 }
 
 function parseText(text) {

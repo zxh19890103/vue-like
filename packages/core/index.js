@@ -1,12 +1,9 @@
 import {
     Component,
-    tplCompile
+    ComAttr,
 } from './component.class'
-
-import * as componentsHub from './components-hub'
 
 export {
     Component,
-    tplCompile,
-    componentsHub
+    ComAttr
 }

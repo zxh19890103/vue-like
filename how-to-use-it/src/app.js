@@ -1,10 +1,18 @@
-import { Component, componentsHub, tplCompile } from '../../packages/core'
+import { 
+    Component,
+    ComAttr
+} from '../../packages/core'
 
+@ComAttr({
+    template: require('./app.html'),
+    key: 'App'
+})
 class App extends Component {
     constructor(props, children) {
         super(props, children)
         this.$state = {
-            title: 'Sh'
+            title: 'Sh',
+            showTitle: true
         }
     }
 
@@ -15,10 +23,12 @@ class App extends Component {
     handleChange(evt) {
         this.set('title', evt.target.value)
     }
-}
 
-App.$tpl = tplCompile(require('./app.html'))
-componentsHub.register('App', App)
+    toggleShowTitle() {
+        const oldValue = this.$state.showTitle
+        this.set('showTitle', !oldValue)
+    }
+}
 
 export {
     App

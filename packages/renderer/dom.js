@@ -1,20 +1,48 @@
 import * as componentsHub from '../core/components-hub'
+import {
+    builtInComponent
+} from './built-in'
 
-const render =  (tree, host, instance) => {
-    if (Array.isArray(tree)) {
-        renderChildren(tree, host, instance)
+const render =  (nodeOrNodes, host, instance) => {
+    if (Array.isArray(nodeOrNodes)) {
+        renderChildren(nodeOrNodes, host, instance)
     } else {
         const {
             type,
-            tag
-        } = tree
+            tag,
+            props,
+        } = nodeOrNodes
         if (type === 1) {
-            renderHost(tree, host, instance)
+            renderHost(nodeOrNodes, host, instance)
         } else {
-            if (tag === 'Text') {
-                renderText(tree, host, instance)
-            } else {
-                renderComponent(tree, host, instance)
+            switch (tag) {
+                case builtInComponent.Text: {
+                    console.log('Text', nodeOrNodes)
+                    renderText(nodeOrNodes, host, instance)
+                    break
+                }
+                case builtInComponent.If: {
+                    console.log('If', nodeOrNodes)
+                    const binds = props.binds
+                    const [val, ins, key] = instance.get(binds.value)
+                    if (val) {
+                        renderChildren(nodeOrNodes.children, host, instance)
+                    }
+                    break
+                }
+                case builtInComponent.Loop: {
+                    console.log('Loop', nodeOrNodes)
+                    break
+                }
+                case builtInComponent.Slot: {
+                    // how to get the slot.
+                    console.log('Slot', nodeOrNodes)
+                    break
+                }
+                default: {
+                    renderComponent(nodeOrNodes, host, instance)
+                    break
+                }
             }
         }
     }
@@ -27,10 +55,10 @@ const renderChildren = (children, host, instance) => {
     })
 }
 
-const renderHost = (tree, host, instance) => {
+const renderHost = (node, host, instance) => {
     const {
         tag, props, children
-    } = tree
+    } = node
     const domElement = document.createElement(tag)
     if (props) {
         const {
@@ -44,12 +72,13 @@ const renderHost = (tree, host, instance) => {
         bindValues(domElement, binds, instance)
     }
     host.appendChild(domElement)
+    setNodeRef(node, domElement)
     // children
     renderChildren(children, domElement, instance)
 }
 
-const renderText = (tree, host, instance) => {
-    const { binds, attrs } = tree.props
+const renderText = (node, host, instance) => {
+    const { binds, attrs } = node.props
     let textNode = null
     if (attrs.value) {
         textNode = document.createTextNode(attrs.value)
@@ -57,20 +86,22 @@ const renderText = (tree, host, instance) => {
         const [val, ins, key] = instance.get(binds.value)
         textNode = document.createTextNode(val)
         if (ins) {
-            ins.watch(key, function(nextVal) {
+            ins.watch(key, function(nextVal, args) {
+                const [textNode] = args
                 textNode.nodeValue = nextVal
-            })
+            }, textNode)
         }
     }
     host.appendChild(textNode)
+    setNodeRef(node, textNode)
 }
 
-const renderComponent = (tree, host, instance) => {
+const renderComponent = (node, host, instance) => {
     const {
         tag,
         props,
         children
-    } = tree
+    } = node
     const type = componentsHub.get(tag)
     if (type === undefined) {
         throw new Error(`component ${tag} is not registered.`)
@@ -78,8 +109,10 @@ const renderComponent = (tree, host, instance) => {
     const com = new type(props, children)
     com.$con = instance
     com.$el = host
-    console.log(com)
-    render(type.$tpl, host, com)
+    setNodeRef(node, com)
+    const tpl = com.render()
+    node.children = tpl
+    render(tpl, host, com)
 }
 
 const renderAttrs = (domElement, attrs) => {
@@ -116,13 +149,19 @@ const bindValues = (domElement, bindings, instance) => {
         }
         renderAttr(domElement, key, val)
         if (ins) {
-            ins.watch(keyOnIns, function(nextVal) {
+            ins.watch(keyOnIns, function(nextVal, args) {
+                const [domElement, key] = args
                 renderAttr(domElement, key, nextVal)
-            })
+            }, domElement, key)
         }
     }
 }
 
+const setNodeRef = (node, ref) => {
+    node.ref = ref
+}
+
 export {
-    render
+    render,
+    setNodeRef
 }

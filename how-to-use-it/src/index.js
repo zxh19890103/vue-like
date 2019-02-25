@@ -5,6 +5,6 @@ import './who'
 const app = new App({
 })
 
-console.log(app)
-
-dom.render(App.$tpl, document.querySelector('#App'), app)
+const tpl = app.render()
+console.log(tpl)
+dom.render(tpl, document.querySelector('#App'), app)

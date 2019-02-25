@@ -1,4 +1,5 @@
 import { compileTpl } from '../../packages/renderer'
+import * as comHub from './components-hub'
 
 class Component {
     constructor(props, children = null) {
@@ -47,28 +48,47 @@ class Component {
         this.$state[key] = value
         for (let dep of this.__deps__) {
             if (dep.field === key) {
-                dep.handler.call(this, value)
+                dep.handler.call(this, value, dep.args)
             }
         }
     }
 
-    initState(state) {
-        this.$state = state
-    }
-
-    watch(field, handler) {
+    watch(field, handler, ...args) {
         this.__deps__.push({
             field,
-            handler
+            handler,
+            args
         })
     }
+
+    render() {
+        throw new Error('not implemented')
+    }
+
 }
 
-const tplCompile = (tpl) => {
-    return compileTpl(tpl)
+const cloneTpl = (tpl) => {
+    return JSON.parse(JSON.stringify(tpl))
+}
+
+function ComAttr({
+    template,
+    key
+}) {
+    const tpl = compileTpl(template)
+    return function decorator(target) {
+        console.log(target)
+        for (let item of target) {
+            console.log(item)
+        }
+        // comHub.register(key || target.name, target)
+        // target.prototype.render = () => {
+        //     return cloneTpl(tpl)
+        // }
+    }
 }
 
 export {
     Component,
-    tplCompile
+    ComAttr,
 }
