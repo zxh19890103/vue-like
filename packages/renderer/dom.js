@@ -1,7 +1,11 @@
 import * as componentsHub from '../core/components-hub'
 import {
-    builtInComponent
+    Tags
 } from './built-in'
+
+import * as $ from './query'
+
+// dom render, not virtual dom render
 
 const render =  (nodeOrNodes, host, instance) => {
     if (Array.isArray(nodeOrNodes)) {
@@ -15,26 +19,43 @@ const render =  (nodeOrNodes, host, instance) => {
         if (type === 1) {
             renderHost(nodeOrNodes, host, instance)
         } else {
+            const {
+                children
+            } = nodeOrNodes
             switch (tag) {
-                case builtInComponent.Text: {
+                case Tags.Root: {
+                    console.log('Root', nodeOrNodes)
+                    renderChildren(children, host, instance)
+                    break
+                }
+                case Tags.Text: {
                     console.log('Text', nodeOrNodes)
                     renderText(nodeOrNodes, host, instance)
                     break
                 }
-                case builtInComponent.If: {
+                case Tags.If: {
                     console.log('If', nodeOrNodes)
                     const binds = props.binds
                     const [val, ins, key] = instance.get(binds.value)
                     if (val) {
-                        renderChildren(nodeOrNodes.children, host, instance)
+                        renderChildren(children, host, instance)
                     }
+                    ins.watch(key, (nextVal, args) => {
+                        const [host, instance] = args
+                        if (nextVal) {
+                            renderChildren(children, host, instance)
+                        } else {
+                            const re = $.findDOMLocation(children[0])
+                            removeChildren(children, host, instance)
+                        }
+                    }, host, instance)
                     break
                 }
-                case builtInComponent.Loop: {
+                case Tags.Loop: {
                     console.log('Loop', nodeOrNodes)
                     break
                 }
-                case builtInComponent.Slot: {
+                case Tags.Slot: {
                     // how to get the slot.
                     console.log('Slot', nodeOrNodes)
                     break
@@ -52,6 +73,13 @@ const renderChildren = (children, host, instance) => {
     if (children === null) return
     children.forEach(item => {
         render(item, host, instance)
+    })
+}
+
+const removeChildren = (children, host, instance) => {
+    if (children === null) return
+    children.forEach(child => {
+        host.removeChild(child.ref)
     })
 }
 
@@ -92,6 +120,7 @@ const renderText = (node, host, instance) => {
             }, textNode)
         }
     }
+    const par = $.findDOMParent(node)
     host.appendChild(textNode)
     setNodeRef(node, textNode)
 }
@@ -111,7 +140,7 @@ const renderComponent = (node, host, instance) => {
     com.$el = host
     setNodeRef(node, com)
     const tpl = com.render()
-    node.children = tpl
+    setNodeChildren(node, tpl)
     render(tpl, host, com)
 }
 
@@ -159,6 +188,19 @@ const bindValues = (domElement, bindings, instance) => {
 
 const setNodeRef = (node, ref) => {
     node.ref = ref
+}
+
+const setNodeChildren = (node, tree) => {
+    if (tree.tag !== Tags.Root) {
+        throw new Error('Tree must be with tag Root.')
+    }
+    const children = tree.children
+    if (!children || children.length === 0) return
+    children.forEach(c => {
+        c.return = node
+    })
+    node.child = children[0]
+    node.children = children
 }
 
 export {

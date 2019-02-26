@@ -1,12 +1,8 @@
 import { 
     Component,
-    ComAttr
+    initComponent
 } from '../../packages/core'
 
-@ComAttr({
-    template: require('./app.html'),
-    key: 'App'
-})
 class App extends Component {
     constructor(props, children) {
         super(props, children)
@@ -29,6 +25,12 @@ class App extends Component {
         this.set('showTitle', !oldValue)
     }
 }
+
+initComponent(
+    'App',
+    App,
+    require('./app.html')
+)
 
 export {
     App

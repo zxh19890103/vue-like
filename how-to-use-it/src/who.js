@@ -1,16 +1,22 @@
 import { 
     Component,
-    ComAttr
+    initComponent
 } from '../../packages/core'
 
-@ComAttr({
-    template: require('./who.html'),
-    key: 'Who'
-})
-export class Who extends Component {
+class Who extends Component {
     constructor(props, children) {
         super(props, children)
         this.$state = {
         }
     }
+}
+
+initComponent(
+    'Who',
+    Who,
+    require('./who.html')
+)
+
+export {
+    Who
 }

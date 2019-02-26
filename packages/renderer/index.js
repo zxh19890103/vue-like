@@ -1,10 +1,14 @@
 import {
-    compile
+    compileHtml,
+    renderChidren,
+    virtualDomRender
 } from './compiler'
 
 import * as dom from './dom'
 
 export {
-    compile as compileTpl,
-    dom
+    compileHtml,
+    renderChidren,
+    dom,
+    virtualDomRender
 }

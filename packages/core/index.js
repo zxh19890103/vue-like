@@ -1,9 +1,9 @@
 import {
     Component,
-    ComAttr,
+    initComponent
 } from './component.class'
 
 export {
     Component,
-    ComAttr
+    initComponent,
 }

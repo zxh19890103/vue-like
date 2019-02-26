@@ -1,10 +1,18 @@
-const builtInComponent = {
+const Tags = {
+    // Internally logic
     Text: 'Text',
+    Slot: 'Slot',
+    Root: 'Root', // only used internally
+    // Directives
     If: 'If',
     Loop: 'Loop',
-    Slot: 'Slot'
+}
+
+const isBuiltInDirective = (tag) => {
+    return tag === Tags.If || tag === Tags.Loop
 }
 
 export {
-    builtInComponent
+    Tags,
+    isBuiltInDirective
 }

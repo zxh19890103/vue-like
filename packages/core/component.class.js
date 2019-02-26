@@ -1,4 +1,4 @@
-import { compileTpl } from '../../packages/renderer'
+import { compileHtml, virtualDomRender } from '../../packages/renderer'
 import * as comHub from './components-hub'
 
 class Component {
@@ -67,28 +67,19 @@ class Component {
 
 }
 
-const cloneTpl = (tpl) => {
-    return JSON.parse(JSON.stringify(tpl))
-}
-
-function ComAttr({
-    template,
-    key
-}) {
-    const tpl = compileTpl(template)
-    return function decorator(target) {
-        console.log(target)
-        for (let item of target) {
-            console.log(item)
-        }
-        // comHub.register(key || target.name, target)
-        // target.prototype.render = () => {
-        //     return cloneTpl(tpl)
-        // }
-    }
+const initComponent = (key, Component, tpl) => {
+    const compiledTpl = compileHtml(tpl) // only once
+    Object.defineProperty(Component.prototype, 'render', {
+        value: function() {
+            return virtualDomRender(compiledTpl)
+        },
+        configurable: false,
+        writable: false
+    })
+    comHub.register(key, Component)
 }
 
 export {
     Component,
-    ComAttr,
+    initComponent,
 }

@@ -6,10 +6,8 @@ module.exports = {
   "plugins": [
     '@babel/plugin-transform-runtime',
     '@babel/plugin-syntax-dynamic-import',
-    'babel-plugin-transform-class-properties',
-    [
-      '@babel/plugin-proposal-decorators', {
-        "decoratorsBeforeExport": true
-    }]
+    ['@babel/plugin-proposal-decorators', { "legacy": true }],
+    ['@babel/plugin-proposal-class-properties', { "loose": false }]
+    //'babel-plugin-transform-class-properties',
   ]
 }
