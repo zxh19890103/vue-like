@@ -1,5 +1,8 @@
 {
     "compilerOptions": {
         "experimentalDecorators": true
+    },
+    "typeAcquisition": {
+        "include": ["rxjs"]
     }
 }

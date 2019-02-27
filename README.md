@@ -19,17 +19,25 @@ a vue-like web framework.
 }
 ```
 
-## flow
 
-1. 用 fast-xml-parser 对 html 组件模板进行解析，生成虚拟节点数据对象（树结构，冻结）
-2. 组件的 render 方法返回此数据对象的副本（循环引用）
-
-## 依赖
-
-```json
-
-{
-    
-}
+## how it works
 
 ```
+We image that every data you can bind to template is from the component's field $state.
+
+Component can receive data from parent by props, and props also can be bound to template.
+
+The data declared as state is reactive by RXJS.
+
+Every update of state will lead to the updates of DOM.
+
+```
+
+### template
+
+We use fast-xml-parser as the parser to parse the HTML user declares to json.
+Then we use the json to generate virtual dom by calling component's render method.
+
+### component
+
+A component is a class with it's own state and methods to process state over the lifecycle.
