@@ -1,5 +1,5 @@
 import parser from 'fast-xml-parser'
-import { Tags, isBuiltInDirective } from './built-in'
+import { Tags, isBuiltInDirective } from './enum'
 
 function compileHtml(template) {
     const json = parser.parse(template, {

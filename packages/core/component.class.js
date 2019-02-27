@@ -1,5 +1,3 @@
-import { compileHtml, virtualDomRender } from '../../packages/renderer'
-import * as comHub from './components-hub'
 
 class Component {
     constructor(props, children = null) {
@@ -67,19 +65,6 @@ class Component {
 
 }
 
-const initComponent = (key, Component, tpl) => {
-    const compiledTpl = compileHtml(tpl) // only once
-    Object.defineProperty(Component.prototype, 'render', {
-        value: function() {
-            return virtualDomRender(compiledTpl)
-        },
-        configurable: false,
-        writable: false
-    })
-    comHub.register(key, Component)
-}
-
 export {
     Component,
-    initComponent,
 }

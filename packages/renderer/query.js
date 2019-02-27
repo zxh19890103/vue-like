@@ -10,7 +10,7 @@ import {
  * return [parent, left, node, right, index]
  * @param {*} node fiber node
  */
-const findDOMLocation = (node) => {
+const findFiberLocation = (node) => {
     let returnFiber = node.return
     if (returnFiber === null) {
         throw new Error('parent fiber node is null?')
@@ -23,7 +23,7 @@ const findDOMLocation = (node) => {
     return [returnFiber, left, node, right, index]
 }
 
-const findDOMParent = (node) => {
+const findDOMParentFiber = (node) => {
     let returnFiber = node.return
     if (returnFiber === null) {
         throw new Error('parent fiber node is null?')
@@ -34,18 +34,26 @@ const findDOMParent = (node) => {
     return returnFiber
 }
 
+const findHostFiber = (node) => {
+    let current = node
+    while (current.type !== NodeTypes.Host) {
+        current = node.return
+    }
+    return current
+}
+
 // 将节点卸载
 const unload = (node) => {
     if (node.tag !== Tags.If) {
         throw new Error('Only If Component can be removed.')
     }
-    let domParentNode = findDOMParent(node)
+    let domParentNode = findDOMParentFiber(node)
     const ref = domParentNode.ref
     // dom remove
     node.children.forEach(c => {
         ref.removeChild(c.ref)
     })
-    // 需要解除 ref
+    // for the dom has been removed, we need reset ref.
     walk(node, (n) => {
         n.ref = null
     })
@@ -53,7 +61,7 @@ const unload = (node) => {
 
 // 在固定位置加载节点
 const load = (node, render) => {
-    const [p, l, n, r, i] = findDOMLocation(node)
+    let right = node.silbing
 }
 
 const walk = (node, perform) => {
@@ -61,32 +69,30 @@ const walk = (node, perform) => {
     while (true) {
         perform(current)
         if (current.child === null) {
-            if (current.silbing === null) {
-                // back to parent
-                let stop = false
-                while (current.silbing === null) {
-                    current = current.return
-                    if (current === node) {
-                        stop = true
-                        break
-                    }
-                }
-                if (stop) {
-                    break
-                }
-                current = current.silbing
-            } else {
-                current = current.silbing
-            }
+            const current = _walkNextIfNoChild(current, node)
+            if (current === null) break
         } else {
             current = current.child
         }
     }
 }
 
+const _walkNextIfNoChild = (node, root) => {
+    // back to parent
+    let current = node
+    while (current.silbing === null) {
+        current = current.return
+        if (current === root) {
+            return null
+        }
+    }
+    current = current.silbing
+    return current
+}
+
 export {
-    findDOMLocation,
-    findDOMParent,
+    findDOMParentFiber,
+    findFiberLocation,
     unload,
     load
 }

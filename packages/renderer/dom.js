@@ -1,8 +1,4 @@
-import * as componentsHub from '../core/components-hub'
-import {
-    Tags
-} from './built-in'
-
+import * as registery from './registery'
 import * as $ from './query'
 
 // dom render, not virtual dom render
@@ -22,49 +18,49 @@ const render =  (nodeOrNodes, host, instance) => {
             const {
                 children
             } = nodeOrNodes
-            switch (tag) {
-                case Tags.Root: {
-                    console.log('Root', nodeOrNodes)
-                    renderChildren(children, host, instance)
-                    break
-                }
-                case Tags.Text: {
-                    console.log('Text', nodeOrNodes)
-                    renderText(nodeOrNodes, host, instance)
-                    break
-                }
-                case Tags.If: {
-                    console.log('If', nodeOrNodes)
-                    const binds = props.binds
-                    const [val, ins, key] = instance.get(binds.value)
-                    if (val) {
-                        renderChildren(children, host, instance)
-                    }
-                    ins.watch(key, (nextVal, args) => {
-                        const [host, instance] = args
-                        if (nextVal) {
-                            renderChildren(children, host, instance)
-                        } else {
-                            const re = $.findDOMLocation(children[0])
-                            removeChildren(children, host, instance)
-                        }
-                    }, host, instance)
-                    break
-                }
-                case Tags.Loop: {
-                    console.log('Loop', nodeOrNodes)
-                    break
-                }
-                case Tags.Slot: {
-                    // how to get the slot.
-                    console.log('Slot', nodeOrNodes)
-                    break
-                }
-                default: {
-                    renderComponent(nodeOrNodes, host, instance)
-                    break
-                }
-            }
+            renderComponent(nodeOrNodes, host, instance)
+            // switch (tag) {
+            //     case Tags.Root: {
+            //         console.log('Root', nodeOrNodes)
+            //         renderChildren(children, host, instance)
+            //         break
+            //     }
+            //     case Tags.Text: {
+            //         console.log('Text', nodeOrNodes)
+            //         renderText(nodeOrNodes, host, instance)
+            //         break
+            //     }
+            //     case Tags.If: {
+            //         console.log('If', nodeOrNodes)
+            //         const binds = props.binds
+            //         const [val, ins, key] = instance.get(binds.value)
+            //         if (val) {
+            //             renderChildren(children, host, instance)
+            //         }
+            //         ins.watch(key, (nextVal, args) => {
+            //             const [host, instance] = args
+            //             if (nextVal) {
+            //                 renderChildren(children, host, instance)
+            //             } else {
+            //                 removeChildren(children, host, instance)
+            //             }
+            //         }, host, instance)
+            //         break
+            //     }
+            //     case Tags.Loop: {
+            //         console.log('Loop', nodeOrNodes)
+            //         break
+            //     }
+            //     case Tags.Slot: {
+            //         // how to get the slot.
+            //         console.log('Slot', nodeOrNodes)
+            //         break
+            //     }
+            //     default: {
+            //         renderComponent(nodeOrNodes, host, instance)
+            //         break
+            //     }
+            // }
         }
     }
 }
@@ -120,7 +116,6 @@ const renderText = (node, host, instance) => {
             }, textNode)
         }
     }
-    const par = $.findDOMParent(node)
     host.appendChild(textNode)
     setNodeRef(node, textNode)
 }
@@ -129,13 +124,13 @@ const renderComponent = (node, host, instance) => {
     const {
         tag,
         props,
-        children
+        slots
     } = node
-    const type = componentsHub.get(tag)
+    const type = registery.get(tag)
     if (type === undefined) {
         throw new Error(`component ${tag} is not registered.`)
     }
-    const com = new type(props, children)
+    const com = new type(props, slots)
     com.$con = instance
     com.$el = host
     setNodeRef(node, com)

@@ -1,7 +1,10 @@
 import { 
-    Component,
-    initComponent
+    Component
 } from '../../packages/core'
+
+import {
+    componentDecorator
+} from '../../packages/renderer'
 
 class Who extends Component {
     constructor(props, children) {
@@ -11,7 +14,7 @@ class Who extends Component {
     }
 }
 
-initComponent(
+componentDecorator(
     'Who',
     Who,
     require('./who.html')

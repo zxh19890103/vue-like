@@ -1,7 +1,10 @@
 import { 
     Component,
-    initComponent
 } from '../../packages/core'
+
+import {
+    componentDecorator
+} from '../../packages/renderer'
 
 class App extends Component {
     constructor(props, children) {
@@ -26,7 +29,7 @@ class App extends Component {
     }
 }
 
-initComponent(
+componentDecorator(
     'App',
     App,
     require('./app.html')

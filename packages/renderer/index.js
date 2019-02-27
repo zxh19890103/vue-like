@@ -1,14 +1,8 @@
-import {
-    compileHtml,
-    renderChidren,
-    virtualDomRender
-} from './compiler'
-
 import * as dom from './dom'
+import { componentDecorator } from './decorators'
+import './built-in'
 
 export {
-    compileHtml,
-    renderChidren,
     dom,
-    virtualDomRender
+    componentDecorator
 }
