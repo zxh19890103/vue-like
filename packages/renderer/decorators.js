@@ -1,4 +1,4 @@
-import { compileHtml, virtualDomRender } from './compiler'
+import { compileHtml, fiberRender } from './compiler'
 import * as registery from './registery'
 
 const componentDecorator = (key, Component, tpl) => {
@@ -9,7 +9,7 @@ const componentDecorator = (key, Component, tpl) => {
     Object.defineProperty(Component.prototype, 'render', {
         value: function() {
             if (compiledTpl)
-                return virtualDomRender(compiledTpl)
+                return fiberRender(compiledTpl)
             else
                 return null
         },

@@ -5,9 +5,10 @@ class Component {
         this.$chidren = children
         this.$state = {
         }
-        this.$con = null
-        this.$el = null
-
+        // parent component
+        this.$parentInstance = null
+        // the fiber node reference
+        this.$fiber = null
         this.__deps__ = []
     }
 
@@ -26,8 +27,8 @@ class Component {
                     val = attrs[key]
                 }
                 if (val === undefined) {
-                    if (binds && binds[key] && this.$con) {
-                        const [v, i] = this.$con.get(binds[key])
+                    if (binds && binds[key] && this.$parentInstance) {
+                        const [v, i] = this.$parentInstance.get(binds[key])
                         val = v
                         if (i) {
                             keyOnIns = binds[key]
@@ -65,6 +66,14 @@ class Component {
 
 }
 
+class HostLikeComponent extends Component {
+    constructor(props, children) {
+        super(props, children)
+        this.$isHostLike = true
+    }
+}
+
 export {
     Component,
+    HostLikeComponent
 }

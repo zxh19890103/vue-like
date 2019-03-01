@@ -1,14 +1,10 @@
-// import { dom } from '../../packages/renderer'
-// import { App } from './app'
-// import './who'
+import { dom } from '../../packages/renderer'
+import { App } from './app'
+import { Test } from './test'
+import './who'
 
-// const app = new App({
-// })
+const app = new Test({
+})
 
-// const tpl = app.render()
+dom.render(app, document.querySelector('#App'))
 
-// console.log(tpl)
-
-// dom.render(tpl, document.querySelector('#App'), app)
-
-import rxjs from 'rxjs'

@@ -4,7 +4,7 @@ import {
 
 import {
     Tags
-} from './built-in'
+} from './enum'
 
 /**
  * return [parent, left, node, right, index]

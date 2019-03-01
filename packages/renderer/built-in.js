@@ -1,12 +1,13 @@
 import {
     Component,
+    HostLikeComponent
 } from '../core'
 
 import {
     componentDecorator
 } from './decorators'
 
-class IfComponent extends Component {
+class IfComponent extends HostLikeComponent {
     constructor(props, children) {
         super(props, children)
         this.$state = {
@@ -16,7 +17,7 @@ class IfComponent extends Component {
 }
 componentDecorator('If', IfComponent, null)
 
-class TextComponent extends Component {
+class TextComponent extends HostLikeComponent {
     constructor(props, children) {
         super(props, children)
         this.$state = {
@@ -26,7 +27,7 @@ class TextComponent extends Component {
 }
 componentDecorator('Text', TextComponent, null)
 
-class RootComponent extends Component {
+class RootComponent extends HostLikeComponent {
     constructor(props, children) {
         super(props, children)
         this.$state = {
@@ -36,7 +37,7 @@ class RootComponent extends Component {
 componentDecorator('Root', RootComponent, null)
 
 
-class SlotComponent extends Component {
+class SlotComponent extends HostLikeComponent {
     constructor(props, children) {
         super(props, children)
         this.$state = {
@@ -45,7 +46,7 @@ class SlotComponent extends Component {
 }
 componentDecorator('Slot', SlotComponent, null)
 
-class LoopComponent extends Component {
+class LoopComponent extends HostLikeComponent {
     constructor(props, children) {
         super(props, children)
         this.$state = {

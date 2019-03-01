@@ -1,82 +1,54 @@
 import * as registery from './registery'
 import * as $ from './query'
+import {
+    NodeTypes
+} from './node-type'
 
-// dom render, not virtual dom render
+function render(com, host) {
+    const tree = com.render()
+    renderNode(tree, host, com)
+}
 
-const render =  (nodeOrNodes, host, instance) => {
-    if (Array.isArray(nodeOrNodes)) {
-        renderChildren(nodeOrNodes, host, instance)
+function renderNode(node, host, instance) {
+    const {
+        type
+    } = node
+    if (type === 1) {
+        renderHost(node, host, instance)
     } else {
-        const {
-            type,
-            tag,
-            props,
-        } = nodeOrNodes
-        if (type === 1) {
-            renderHost(nodeOrNodes, host, instance)
-        } else {
-            const {
-                children
-            } = nodeOrNodes
-            renderComponent(nodeOrNodes, host, instance)
-            // switch (tag) {
-            //     case Tags.Root: {
-            //         console.log('Root', nodeOrNodes)
-            //         renderChildren(children, host, instance)
-            //         break
-            //     }
-            //     case Tags.Text: {
-            //         console.log('Text', nodeOrNodes)
-            //         renderText(nodeOrNodes, host, instance)
-            //         break
-            //     }
-            //     case Tags.If: {
-            //         console.log('If', nodeOrNodes)
-            //         const binds = props.binds
-            //         const [val, ins, key] = instance.get(binds.value)
-            //         if (val) {
-            //             renderChildren(children, host, instance)
-            //         }
-            //         ins.watch(key, (nextVal, args) => {
-            //             const [host, instance] = args
-            //             if (nextVal) {
-            //                 renderChildren(children, host, instance)
-            //             } else {
-            //                 removeChildren(children, host, instance)
-            //             }
-            //         }, host, instance)
-            //         break
-            //     }
-            //     case Tags.Loop: {
-            //         console.log('Loop', nodeOrNodes)
-            //         break
-            //     }
-            //     case Tags.Slot: {
-            //         // how to get the slot.
-            //         console.log('Slot', nodeOrNodes)
-            //         break
-            //     }
-            //     default: {
-            //         renderComponent(nodeOrNodes, host, instance)
-            //         break
-            //     }
-            // }
-        }
+        renderComponent(node, host, instance)
     }
 }
 
 const renderChildren = (children, host, instance) => {
     if (children === null) return
     children.forEach(item => {
-        render(item, host, instance)
+        renderNode(item, host, instance)
     })
 }
 
-const removeChildren = (children, host, instance) => {
-    if (children === null) return
-    children.forEach(child => {
-        host.removeChild(child.ref)
-    })
+function renderComponent(node, host, instance) {
+    const {
+        tag,
+        props,
+        children
+    } = node
+    const type = registery.get(tag)
+    if (type === undefined) {
+        throw new Error(`Component ${tag} is not registered.`)
+    }
+    const com = new type(props, children)
+    console.log(com)
+    com.$parentInstance = instance
+    com.$fiber = node
+    node.ref = com
+    if (com.$isHostLike) {
+        renderChildren(children, host, com)
+    } else {
+        const tree = com.render()
+        setNodeTree(node, tree)
+        renderNode(tree, host, com)
+    }
 }
 
 const renderHost = (node, host, instance) => {
@@ -96,47 +68,9 @@ const renderHost = (node, host, instance) => {
         bindValues(domElement, binds, instance)
     }
     host.appendChild(domElement)
-    setNodeRef(node, domElement)
+    node.ref = domElement
     // children
     renderChildren(children, domElement, instance)
-}
-
-const renderText = (node, host, instance) => {
-    const { binds, attrs } = node.props
-    let textNode = null
-    if (attrs.value) {
-        textNode = document.createTextNode(attrs.value)
-    } else {
-        const [val, ins, key] = instance.get(binds.value)
-        textNode = document.createTextNode(val)
-        if (ins) {
-            ins.watch(key, function(nextVal, args) {
-                const [textNode] = args
-                textNode.nodeValue = nextVal
-            }, textNode)
-        }
-    }
-    host.appendChild(textNode)
-    setNodeRef(node, textNode)
-}
-
-const renderComponent = (node, host, instance) => {
-    const {
-        tag,
-        props,
-        slots
-    } = node
-    const type = registery.get(tag)
-    if (type === undefined) {
-        throw new Error(`component ${tag} is not registered.`)
-    }
-    const com = new type(props, slots)
-    com.$con = instance
-    com.$el = host
-    setNodeRef(node, com)
-    const tpl = com.render()
-    setNodeChildren(node, tpl)
-    render(tpl, host, com)
 }
 
 const renderAttrs = (domElement, attrs) => {
@@ -181,24 +115,14 @@ const bindValues = (domElement, bindings, instance) => {
     }
 }
 
-const setNodeRef = (node, ref) => {
-    node.ref = ref
-}
-
-const setNodeChildren = (node, tree) => {
-    if (tree.tag !== Tags.Root) {
+const setNodeTree = (node, tree) => {
+    if (tree.type !== NodeTypes.Root) {
         throw new Error('Tree must be with tag Root.')
     }
-    const children = tree.children
-    if (!children || children.length === 0) return
-    children.forEach(c => {
-        c.return = node
-    })
-    node.child = children[0]
-    node.children = children
+    node.child = tree
+    tree.return = node
 }
 
 export {
-    render,
-    setNodeRef
+    render
 }

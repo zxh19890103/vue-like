@@ -1,38 +1,38 @@
 import parser from 'fast-xml-parser'
-import { Tags, isBuiltInDirective } from './enum'
+import { Tags } from './enum'
+
+const ATTR_NODE_NAME = 'Attributes'
+const TEXT_NODE_NAME = 'text'
 
 function compileHtml(template) {
     const json = parser.parse(template, {
         attributeNamePrefix: '',
-        attrNodeName: '#attrs',
+        attrNodeName: ATTR_NODE_NAME,
+        textNodeName : TEXT_NODE_NAME,
         ignoreAttributes: false,
         allowBooleanAttributes: true
     })
+    console.log(json)
     return json
 }
 
-function virtualDomRender(o) {
+function fiberRender(o) {
     const root = createElement(Tags.Root)
     renderChidren(root, o)
     return root
 }
 
-function neverHasChildren(element) {
-    const elementKey = element.key
-    return elementKey === Tags.Text
-}
-
 function renderChidren(parent, o) {
-    if (neverHasChildren(parent)) return
     let children = []
     let value = null
     if (typeof o === 'string') {
         children = parseText(o)
     } else {
         Object.keys(o).forEach(key => {
-            if (key === '#attrs') {
+            console.log(key)
+            if (key === ATTR_NODE_NAME) {
                 return
-            } else if (key === '#text') {
+            } else if (key === TEXT_NODE_NAME) {
                 children.push(...parseText(o[key]))
             } else {
                 value = o[key]
@@ -48,13 +48,8 @@ function renderChidren(parent, o) {
             cur.return = parent
             return cur
         }, null)
-        parent.child = first
-        const isHost = parent.type === 1 || parent.type === 3
-        if (isBuiltInDirective(parent.tag) || isHost) {
-            parent.children = children
-        } else {
-            parent.slots = children
-        }
+        parent.child = first       
+        parent.children = children
     }
 }
 
@@ -66,8 +61,7 @@ function createElement(tag, val) {
         type, // 1 =  host element；2 = 自定义组件
         tag, // 标签，对于host element，是 HTML 标签；对于component，是首字母大写自定义标签
         props: null, // 外部输入
-        children: null, // 对于host组件 子元素
-        slots: null, // 对于自定义组件 的子元素
+        children: null, // 子元素
         ref: null, // host 元素 或者 component 实例 或者 虚拟 组件（if、text、loop等）
         // Fiber
         return: null,
@@ -86,7 +80,7 @@ function createElement(tag, val) {
     } else if (tag === Tags.Root) {
         // nothing
     } else {
-        element.props = parseAttrs(val['#attrs'])
+        element.props = parseAttrs(val[ATTR_NODE_NAME])
     }
     return element
 }
@@ -136,5 +130,5 @@ function parseText(text) {
 export {
     compileHtml,
     renderChidren,
-    virtualDomRender
+    fiberRender
 }
