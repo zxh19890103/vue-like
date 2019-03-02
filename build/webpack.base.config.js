@@ -10,19 +10,19 @@ const babelRC = require('./babelrc')
 module.exports = {
   context: util.resolve(),
   entry: {
-    app: './how-to-use-it/src/index'
+    app: './demo/bootstrap'
   },
   output: {
     filename: "[name].[hash:7].js",
     path: util.resolve('./dist')
   },
   resolve: {
-    extensions: [ '.jsx', '.js' ]
+    extensions: [ '.js', '.ts' ]
   },
   module: {
     rules: [
       {
-        test: /\.jsx?$/,
+        test: /\.ts$/,
         use: [
           {
             loader: 'cache-loader'
@@ -69,7 +69,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin([util.resolve('./dist')]),
     new HtmlWebpackPlugin({
-      template: './how-to-use-it/index.html',
+      template: './demo/index.html',
       filename: 'index.html'
     }),
     new ManifestPlugin()
