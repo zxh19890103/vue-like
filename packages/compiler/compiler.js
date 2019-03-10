@@ -28,10 +28,28 @@
  */
 const fs = require('fs')
 const path = require('path')
+const util = require('./util')
+const reader = require('./reader')
 
-const tagsStack = [
-    createElement('Root', 3)
-]
+const stack = {
+    _size: 0,
+    _data: [],
+    push(element) {
+        this._data.push(element)
+        this._size += 1
+    },
+    pop() {
+        const element = this._data.pop()
+        this._size -= 1
+        return element
+    },
+    pick() {
+        return this._data[this._size - 1]
+    },
+    init() {
+        this.push(createElement('Root', 3))
+    }
+}
 
 function compile(filepath) {
     const stream = fs.createReadStream(filepath, {
@@ -39,225 +57,71 @@ function compile(filepath) {
         autoClose: true
     })
     stream.on('readable', () => {
-        parse(stream)
+        stack.init()
+        reader.setStream(stream)
+        parseInner()
     })
     stream.on('end', () => {
         console.log('end')
+        reader.setStream(null)
+        console.log(stack.pick())
     })
 }
 
-function parse(stream) {
-    let char = ''
-    let isClosing = 0
-    let isOpenning = 0
+function parseInner() {
     while (true) {
-        char = stream.read(1)
-        if (char === null) {
-            // end
-            break
-        }
-        if (char === '<') {
-            isClosing = 1
-            isOpenning = 1
-        } else if (char === '/') {
-            if (isClosing === 1) {
-                isClosing = 0
-                char = tagClose(stream, tagsStack)
-            }
-        } else if (isUnvisibleChar(char)) {
-            isClosing = 0
-            isOpenning = 0
-            char = skipUnvisibleChars(stream, char)
+        reader.readChar()
+        if (reader.isDocumentEnded()) break
+        if (reader.isTagBegin()) {
+            parseTag()
+        } else if (reader.isTagClose()) {
+            const name = reader.readCloseTagName()
+            closeTag(name)
         } else {
-            isClosing = 0
-            if (isOpenning) {
-                isOpenning = 0
-                char = parseTag(stream, char)
-            } else {
-                isOpenning = 0
-                char = parseText(stream, char)
-            }
+            parseText()
         }
     }
 }
 
-function parseTag(stream, firstChar) {
-    const tagType = isFirstCharAZaz(firstChar)
-    if (tagType === 0) {
-        throw new Error('First char of Tag must be a-zA-Z')
-    }
-    const [tag, ended, closed, nextChar] = tagOpen(stream, firstChar)
-    const element = createElement(tag, tagType)
-    tagsStack.push(element)
+function parseTag() {
+    const [tagname, ended, closed] = reader.readBeginTagName()
+    const element = beginTag(tagname)
     if (closed) {
-        tagClose(null, tagsStack)
-        return nextChar
-    } else {
-        if (ended) {
-            return nextChar
-        } else {
-            const [attrs, closed2, nextChar2] = parseAttributes(stream)
-            element.__attrs = attrs
-            if (closed2) {
-                tagClose(null, tagsStack)
-            }
-            return nextChar2
+        closeTag(tagname)
+        return
+    }
+    if (!ended) {
+        const [props, closed] = reader.readProps()
+        element.__attrs = props
+        if (closed) {
+            closeTag(tagname)
         }
     }
 }
 
-function tagOpen(stream, firstChar) {
-    let char = firstChar
-    let tagName = char
-    let isEnded = false // the begin tag ends
-    let isClosed = 0 // 0 - no , 2 - yes // the tag is closed
-    while (true) {
-        char = stream.read(1)
-        if (char === ' ') break
-        if (char === '/') isClosed = 1
-        if (char === '>') {
-            if (isClosed === 1) {
-                isClosed = 2
-            }
-            isEnded = true
-            char = stream.read(1)
-            break
-        } else {
-            isClosed = 0
-        }
-        tagName += char
-    }
-    return [tagName, isEnded, isClosed === 2, char]
+function parseText() {
+    const text = reader.readText()
+    appendChild(text)
 }
 
-function tagClose(stream, stack) {
-    const element = stack.pop()
-    if (stream !== null) {
-        let char = ''
-        let i = 0
-        let wantTagName = element.tag
-        while (true) {
-            char = stream.read(1)
-            if (char === '>') {
-                return stream.read(1)
-            }
-            if (wantTagName[i] !== char) {
-                throw new Error(`Wrong end tag with name: ${wantTagName}`)
-            }
-            i ++
-        }
-    }
-}
-
-function skipUnvisibleChars(stream, firstChar) {
-    let char = firstChar
-    while (true) {
-        if (isUnvisibleChar(char)) {
-            char = stream.read(1)
-        } else {
-            return char
-        }
-    }
-}
-
-function isUnvisibleChar(char) {
-    return char === ' ' || char === '\t' || char === '\n'
-}
-
-// todo:
-function parseAttributes(stream) {
-    let char = ''
-    let isClosed = 0
-    let attributes = ''
-    while (true) {
-        char = stream.read(1)
-        attributes += char
-        if (char === '/') isClosed = 1
-        if (char === '>') {
-            if (isClosed === 1) {
-                isClosed = 2
-            }
-            char = stream.read(1)
-            break
-        } else {
-            isClosed = 0
-        }
-    }
-    return [
-        attributes,
-        isClosed,
-        char
-    ]
-}
-
-// function parseAttributeBegin(stream, firstChar) {
-//     let char = ''
-//     let key = firstChar
-//     let value = null
-//     let isClosed = 0
-//     let isEnded = false
-//     let isPostEqualSymbol = false
-//     let isValueBegin = false
-//     while (true) {
-//         char = stream.read(1)
-//         if (char === '=') {
-//             isPostEqualSymbol = true
-//             continue
-//         }
-//         if (char === '"') {
-//             isValueBegin = true
-//             continue
-//         }
-//         if (char === '/') isClosed = 1
-//         if (char === ' ') {
-//             const char = tryFindingEqualSymbol(stream)
-//             if (char === '=')
-//             break
-//         }
-//         if (char === '>') {
-//             if (isClosed === 1) isClosed = 2
-//             isEnded = true
-//             break
-//         } else {
-//             isClosed = 0
-//         }
-//         if (isPostEqualSymbol) {
-//             value += char
-//         } else {
-//             key += char
-//         }
-//     }
-//     return [
-//         key,
-//         value,
-//         isEnded,
-//         isClosed
-//     ]
-// }
-
-// function tryFindingEqualSymbol(stream) {
-//     let char = ''
-//     while (true) {
-//         char = stream.read(1)
-//         if (char === ' ') continue
-//         return char
-//     }
-// }
-
-function parseText(stream, firstChar) {
-    let char = firstChar
-    let text = char
-    while (true) {
-        char = stream.read(1)
-        if (char === '<') {
-            break
-        }
-        text += char
-    }
-    const element = createElement('Text', 2)
-    element.props.value = text
+function beginTag(tagname) {
+    const element = createElement(tagname, 1)
     appendChild(element)
-    return char
+    stack.push(element)
+}
+
+function closeTag(tagname) {
+    const element = stack.pop()
+    util.should(element.tag === tagname, 'The begin tagname should equal to the end')
+}
+
+function appendChild(element) {
+    const parentElement = stack.pick()
+    if (!parentElement.children) {
+        parentElement.children= [element]
+    } else {
+        parentElement.children.push(element)
+    }
 }
 
 function createElement(tag, type) {
@@ -268,32 +132,6 @@ function createElement(tag, type) {
         },
         __attrs: null,
         children: null
-    }
-}
-
-/**
- * A-Z return 2
- * a-z return 1
- * else return 0
- */
-function isFirstCharAZaz(str) {
-    if (!str) return 0
-    const firstCharCode = str.charCodeAt(0)
-    if (firstCharCode > 64 && firstCharCode < 91) {
-        return 2
-    } else if (firstCharCode > 96 && firstCharCode < 123) {
-        return 1
-    } else {
-        return 0
-    }
-}
-
-function appendChild(element) {
-    const parentElement = tagsStack[tagsStack.length - 1]
-    if (!parentElement.children) {
-        parentElement.children= [element]
-    } else {
-        parentElement.children.push(element)
     }
 }
 
