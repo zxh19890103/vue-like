@@ -1,6 +1,6 @@
 module.exports = {
   "presets": [
-    "@babel/preset-typescript",
+    ["@babel/preset-typescript", { isTSX: true, allExtensions: true }],
     "@babel/preset-env"
   ],
   "ignore": ["third_party"],

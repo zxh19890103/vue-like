@@ -1,5 +1,5 @@
 'use strict'
-
+const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const ManifestPlugin = require('webpack-manifest-plugin')
@@ -17,12 +17,12 @@ module.exports = {
     path: util.resolve('./dist')
   },
   resolve: {
-    extensions: [ '.js', '.ts' ]
+    extensions: [ '.js', '.ts', '.tsx' ]
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         use: [
           {
             loader: 'cache-loader'
@@ -36,15 +36,10 @@ module.exports = {
           },
           {
             loader: 'babel-loader',
-            // use babel rc
             options: babelRC
           }
         ],
         exclude: /node_modules/
-      },
-      {
-        test: /\.html$/,
-        loader: 'html-loader'
       },
       {
         test: /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/,
