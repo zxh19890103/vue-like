@@ -5,19 +5,17 @@ let stream = null
 let lastChar = null
 let currentChar = null
 
-function readChar(times = 1) {
-    for (let i = 0; i < times; i ++) {
-        lastChar = currentChar
-        currentChar = stream.read(1)
-    }
+function readChar() {
+    lastChar = currentChar
+    currentChar = stream.read(1)
 }
 
 function readCloseTagName() {
     let name = ''
     while (true) {
         readChar()
-        if (currentChar === enums.END_OF_TAG_OPEN) break
         util.should(currentChar !== null, 'stream ends while readCloseTagName')
+        if (currentChar === enums.GT) break
         name += currentChar
     }
     return name
@@ -29,18 +27,16 @@ function readBeginTagName() {
     let isSelfClosed = false
     while (true) {
         readChar()
-        if (currentChar === enums.EMPTY) {
+        if (is.tagNameStop()) {
             break
-        } else if (currentChar === enums.END_OF_TAG_OPEN) {
+        } else if (currentChar === enums.GT) {
             isEnded = true
             break
         } else if (currentChar === enums.SLASH) {
             readChar()
-            util.should(currentChar === enums.END_OF_TAG_OPEN, 'Char should be `>` after `/`')
+            util.should(currentChar === enums.GT, 'Char should be `>` after `/`')
             isSelfClosed = true
             break
-        } else if (util.isUnvisibleChar(currentChar)) {
-            util.should(false, 'unvisible char while readBeginTagName')
         }
         util.should(currentChar !== null, 'stream ends while readBeginTagName')
         name += currentChar
@@ -49,79 +45,98 @@ function readBeginTagName() {
 }
 
 function readProps() {
-    util.should(currentChar === enums.EMPTY, 'Why is the currentChar not Empty?')
+    util.should(is.tagNameStop(), 'Why is the currentChar not Empty (space | \\n | \\t)?')
     let propsExpr = ''
     let isSelfClosed = false
     while (true) {
         readChar()
-        if (currentChar === enums.END_OF_TAG_OPEN) {
-            if (lastChar === enums.SLASH) {
-                isSelfClosed = true
-            }
+        util.should(currentChar !== null, 'stream ends while readProps')
+        if (currentChar === enums.SLASH) {
+            readChar()
+            util.should(currentChar === enums.GT, 'currentChar should be `>` after `/` in readProps')
+            isSelfClosed = true
+            break
+        } else if (currentChar === enums.GT) {
             break
         }
-        if (currentChar === null) break
         propsExpr += currentChar
     }
     return [propsExpr, isSelfClosed]
 }
 
 function readText() {
-    let textExpr = getTwoChars()
+    let textExpr = currentChar
+    let docIsOver = false
+    let flag = -1
     while (true) {
-        readChar(2)
-        util.should(currentChar !== null, 'stream ends while readText')
-        if (isTagBegin() || isTagClose()) break
-        if (currentChar === enums.SLASH) continue
-        textExpr += currentChar
+        readChar()
+        if (is.documentEnded()) {
+            docIsOver = true
+            break
+        }
+        if (currentChar === enums.LT) {
+            // This may be the begin or the end of a tag, where text parsing should be stopped.
+            // read one char further and check if it does be the begin or the end of a tag.           
+            flag = is.validAfterLT()
+            break
+        } else {
+            textExpr += currentChar
+        }
     }
-    return textExpr
+    return [ textExpr, docIsOver, flag]
 }
 
-function isTagBegin() {
-    if (lastChar === null || currentChar === null) return false
-    const charCode = currentChar.charCodeAt(0)
-    const isAZ = charCode > 64 && charCode < 91
-    const isaz = charCode > 96 && charCode < 123
-    return lastChar === '<' && (isAZ || isaz)
+const is = {
+    validAfterLT: (read = true) => {
+        util.should(currentChar === enums.LT, 'Why you don\'t give me `<` in is.validAfterLT')
+        read && readChar()
+        if (util.isAZaz(currentChar)) return enums.flags.BEGIN_OF_TAG
+        else if (currentChar === enums.SLASH) return enums.flags.CLOSE_OF_TAG
+        else util.should(false, 'Char should be [AZaz] or slash after `<` in is.validAfterLT')
+    },
+    tagNameStop: () => {
+        return currentChar === ' ' || currentChar === '\t' || currentChar === '\n'
+    },
+    tagBegin: () => {
+        if (lastChar === null || currentChar === null) return false
+        return lastChar === '<' && util.isAZaz(currentChar)
+    },
+    tagClose: () => {
+        if (lastChar === null || currentChar === null) return false
+        return lastChar === '<' && currentChar === '/'
+    },
+    documentEnded: () => {
+        return currentChar === null
+    }
 }
 
-function isTagClose() {
-    if (lastChar === null || currentChar === null) return false
-    return lastChar === '<' && currentChar === '/'
-}
-
-function isDocumentEnded() {
-    return currentChar === null
+const get = {
+    currentChar: () => currentChar,
+    lastChar: () => lastChar,
+    // null + null === 0
+    twoChars: () => {
+        return lastChar || '' + (currentChar || '')
+    },
+    typeOf: () => {
+        if (currentChar === enums.LT) {
+            return is.validAfterLT()
+        } else {
+            return enums.flags.TEXT
+        }
+    }
 }
 
 function setStream(_stream) {
     stream = _stream
 }
 
-function getCurrentChar() {
-    return currentChar
-}
-
-function getLastChar() {
-    return lastChar
-}
-
-function getTwoChars() {
-    return lastChar + currentChar
-}
-
 module.exports = {
     setStream,
     readChar,
-    isTagBegin,
-    isTagClose,
     readBeginTagName,
     readCloseTagName,
     readProps,
     readText,
-    isDocumentEnded,
-    getCurrentChar,
-    getLastChar,
-    getTwoChars
+    is,
+    get
 }

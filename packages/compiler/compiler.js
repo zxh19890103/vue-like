@@ -29,6 +29,7 @@
 const fs = require('fs')
 const path = require('path')
 const util = require('./util')
+const enums = require('./enums')
 const reader = require('./reader')
 
 const stack = {
@@ -59,8 +60,7 @@ function compile(filepath) {
         autoClose: true
     })
     stream.on('readable', () => {
-        console.log(stream.isPaused())
-        console.log('readable')
+        console.log(stream.isPaused())       
         main(stream)
     })
     stream.on('end', () => {
@@ -77,65 +77,75 @@ function main(stream) {
     }
     stack.init()
     reader.setStream(stream)
-    test()
+    loop()
 }
 
-function test() {
+function loop() {
+    let flag = 0
+    let end = false
     while (true) {
-        reader.readChar(2)
-        console.log('>>', reader.getTwoChars())
-        const isDocEnded = reader.isDocumentEnded()
-        if (isDocEnded) break
-        parseText()
-    }
-}
-
-function parseInner() {
-    while (true) {
-        reader.readChar(2)
-        console.log('>>', reader.getTwoChars())
-        const isDocEnded = reader.isDocumentEnded()
-        if (isDocEnded) {
-            console.log('---Over---')
-            break
-        }
-        const isTagBegin = reader.isTagBegin()
-        const isTagClose = reader.isTagClose()
-        if (isTagBegin) {
-            parseTag()
-        } else if (isTagClose) {
-            const name = reader.readCloseTagName()
-            closeTag(name)
-        } else {
-            parseText()
+        if (end) break
+        switch (flag) {
+            case 0: {
+                // this is a boot
+                const [isEnd, nextFlag] = parseBoot()
+                end = isEnd
+                flag = nextFlag
+                break
+            }
+            case enums.flags.BEGIN_OF_TAG: {
+                // this is open of a tag
+                parseTag()
+                flag = 0
+                break
+            }
+            case enums.flags.CLOSE_OF_TAG: {
+                // this is close of a tag
+                const tagName = reader.readCloseTagName()
+                closeTag(tagName)
+                flag = 0
+                break
+            }
+            case enums.flags.TEXT: {
+                const [isEnd, nextFlag] = parseText()
+                end = isEnd
+                flag = nextFlag
+                break
+            }
         }
     }
 }
 
 function parseTag() {
-    const [tagname, ended, closed] = reader.readBeginTagName()
-    const element = beginTag(tagname)
-    if (closed) {
-        closeTag(tagname)
+    const [tagName, ended, selfClosed] = reader.readBeginTagName()
+    const element = beginTag(tagName)
+    if (selfClosed) {
+        closeTag(tagName)
         return
     }
-    if (!ended) {
-        const [props, closed] = reader.readProps()
-        element.__attrs = props
-        if (closed) {
-            closeTag(tagname)
-        }
+    if (ended) return
+    const [props, selfClosed2] = reader.readProps()
+    element.__attrs = props
+    if (selfClosed2) {
+        closeTag(tagName)
     }
 }
 
 function parseText() {
-    const text = reader.readText()
-    console.log(text)
+    const [text, docIsOver, flag] = reader.readText()
     appendChild(text)
+    return [docIsOver, flag]
+}
+
+function parseBoot() {
+    reader.readChar()
+    const end = reader.is.documentEnded()   
+    const flag = reader.get.typeOf()
+    return [end, flag]
 }
 
 function beginTag(tagname) {
-    const element = createElement(tagname, 1)
+    const element = createElement(tagname, util.isAZ(tagname) ? 2 : 1)
     appendChild(element)
     stack.push(element)
     return element
