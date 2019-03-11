@@ -77,7 +77,17 @@ function main(stream) {
     }
     stack.init()
     reader.setStream(stream)
-    parseText()
+    test()
+}
+
+function test() {
+    while (true) {
+        reader.readChar(2)
+        console.log('>>', reader.getTwoChars())
+        const isDocEnded = reader.isDocumentEnded()
+        if (isDocEnded) break
+        parseText()
+    }
 }
 
 function parseInner() {
@@ -128,6 +138,7 @@ function beginTag(tagname) {
     const element = createElement(tagname, 1)
     appendChild(element)
     stack.push(element)
+    return element
 }
 
 function closeTag(tagname) {

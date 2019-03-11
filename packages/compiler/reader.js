@@ -67,7 +67,7 @@ function readProps() {
 }
 
 function readText() {
-    let textExpr = currentChar
+    let textExpr = getTwoChars()
     while (true) {
         readChar(2)
         util.should(currentChar !== null, 'stream ends while readText')
