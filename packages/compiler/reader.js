@@ -5,9 +5,11 @@ let stream = null
 let lastChar = null
 let currentChar = null
 
-function readChar() {
-    lastChar = currentChar
-    currentChar = stream.read(1)
+function readChar(times = 1) {
+    for (let i = 0; i < times; i ++) {
+        lastChar = currentChar
+        currentChar = stream.read(1)
+    }
 }
 
 function readCloseTagName() {
@@ -67,8 +69,7 @@ function readProps() {
 function readText() {
     let textExpr = currentChar
     while (true) {
-        readChar()
-        console.log(currentChar)
+        readChar(2)
         util.should(currentChar !== null, 'stream ends while readText')
         if (isTagBegin() || isTagClose()) break
         if (currentChar === enums.SLASH) continue
@@ -78,7 +79,7 @@ function readText() {
 }
 
 function isTagBegin() {
-    if (lastChar === null) return false
+    if (lastChar === null || currentChar === null) return false
     const charCode = currentChar.charCodeAt(0)
     const isAZ = charCode > 64 && charCode < 91
     const isaz = charCode > 96 && charCode < 123
@@ -86,7 +87,7 @@ function isTagBegin() {
 }
 
 function isTagClose() {
-    if (lastChar === null) return false
+    if (lastChar === null || currentChar === null) return false
     return lastChar === '<' && currentChar === '/'
 }
 
@@ -98,6 +99,18 @@ function setStream(_stream) {
     stream = _stream
 }
 
+function getCurrentChar() {
+    return currentChar
+}
+
+function getLastChar() {
+    return lastChar
+}
+
+function getTwoChars() {
+    return lastChar + currentChar
+}
+
 module.exports = {
     setStream,
     readChar,
@@ -107,5 +120,8 @@ module.exports = {
     readCloseTagName,
     readProps,
     readText,
-    isDocumentEnded
+    isDocumentEnded,
+    getCurrentChar,
+    getLastChar,
+    getTwoChars
 }

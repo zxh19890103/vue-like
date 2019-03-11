@@ -32,6 +32,7 @@ const util = require('./util')
 const reader = require('./reader')
 
 const stack = {
+    _initialized: false,
     _size: 0,
     _data: [],
     push(element) {
@@ -48,6 +49,7 @@ const stack = {
     },
     init() {
         this.push(createElement('Root', 3))
+        this._initialized = true
     }
 }
 
@@ -57,24 +59,41 @@ function compile(filepath) {
         autoClose: true
     })
     stream.on('readable', () => {
-        stack.init()
-        reader.setStream(stream)
-        parseInner()
+        console.log(stream.isPaused())
+        console.log('readable')
+        main(stream)
     })
     stream.on('end', () => {
-        console.log('end')
+        console.log('---READ END---')
         reader.setStream(null)
         console.log(stack.pick())
     })
 }
 
+function main(stream) {
+    if (stack._initialized) {
+        reader.readChar()
+        return
+    }
+    stack.init()
+    reader.setStream(stream)
+    parseText()
+}
+
 function parseInner() {
     while (true) {
-        reader.readChar()
-        if (reader.isDocumentEnded()) break
-        if (reader.isTagBegin()) {
+        reader.readChar(2)
+        console.log('>>', reader.getTwoChars())
+        const isDocEnded = reader.isDocumentEnded()
+        if (isDocEnded) {
+            console.log('---Over---')
+            break
+        }
+        const isTagBegin = reader.isTagBegin()
+        const isTagClose = reader.isTagClose()
+        if (isTagBegin) {
             parseTag()
-        } else if (reader.isTagClose()) {
+        } else if (isTagClose) {
             const name = reader.readCloseTagName()
             closeTag(name)
         } else {
@@ -101,6 +120,7 @@ function parseTag() {
 
 function parseText() {
     const text = reader.readText()
+    console.log(text)
     appendChild(text)
 }
 
@@ -135,4 +155,4 @@ function createElement(tag, type) {
     }
 }
 
-compile(path.resolve('./tpl.html'))
+compile(path.resolve(__dirname, './tpl.html'))
