@@ -3,9 +3,27 @@ function should(bool, msg) {
     else throw new Error(msg)
 }
 
+function isEmpty(str) {
+    let val = true
+    let char = null
+    for (let i in str) {
+        char = str[i]
+        if (char === ' ' || char === '\n' || char === '\t') {
+           continue 
+        }
+        val = false
+    }
+    return val
+}
+
 function isAZ(char) {
     const code = char.charCodeAt(0)
     return code > 64 && code < 91
+}
+
+function isaz(char) {
+    const code = char.charCodeAt(0)
+    return code > 96 && code < 123
 }
 
 function isAZaz(char) {
@@ -18,5 +36,7 @@ function isAZaz(char) {
 module.exports = {
     should,
     isAZaz,
-    isAZ
+    isAZ,
+    isaz,
+    isEmpty
 }

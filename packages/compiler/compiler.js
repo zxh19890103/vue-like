@@ -60,14 +60,45 @@ function compile(filepath) {
         autoClose: true
     })
     stream.on('readable', () => {
-        console.log(stream.isPaused())       
         main(stream)
     })
     stream.on('end', () => {
         console.log('---READ END---')
         reader.setStream(null)
-        console.log(stack.pick())
+        // write json data into file.
+        const root = stack.pick()
+        if (root.type !== 3) {
+            throw new Error('Template is not in right syntax.')
+        }
+        clean(root)
+        fs.writeFile(
+            path.resolve(__dirname, './output.json'),
+            JSON.stringify(root),
+            () => {
+                console.log('saved!')
+            })
     })
+}
+
+function clean(node) {
+    const attrs = parseProps(node.__attrs)
+    node.props = attrs
+    delete node.__attrs
+    if (node.children) {
+        const children = []
+        node.children.forEach(n => {
+            if (typeof n === 'string') {
+                const textNodes = parseTextNode(n)
+                if (textNodes) {
+                    children.push(...textNodes.filter(i => !!i))
+                }
+            } else {
+                children.push(n)
+                clean(n)
+            }
+        })
+        node.children = children
+    }
 }
 
 function main(stream) {
@@ -174,6 +205,91 @@ function createElement(tag, type) {
         __attrs: null,
         children: null
     }
+}
+
+function parseProps(attrsStr) {
+    // remove ' ' and  \t and \n
+    // eg: "\n  style  =  \"color: #909090;\"\n"
+    if (!attrsStr) return null
+    let char = null
+    let i = 0
+    let name = ''
+    let value = ''
+    // 0 - before name
+    // 1 - name
+    // 2 - after name
+    // 3 - before value
+    // 4 - value
+    // 0 - after value
+    let stage = 0
+    let props = {
+    }
+    while (true) {
+        char = attrsStr[i]
+        if (char === undefined) break
+        if (stage === 0) {
+            if (char === ':' || util.isaz(char)) {
+                stage = 1
+                name = char
+            }
+        } else if (stage === 1) {
+            if (char === ' ' || char === '=') {
+                stage = 2
+            } else {
+                name += char
+            }
+        } else if (stage === 2) {
+            // expect `"`, but this may not appear. 
+            if (char === '"') {
+                stage = 3
+            } else if (char === ':' || util.isaz(char)) {
+                stage = 1
+                props[name] = true
+                // from start
+                name = char
+                value = ''
+            }
+        } else if (stage === 3) {
+            stage = 4
+            value += char
+        } else if (stage === 4) {
+            if (char === '"') {
+                stage = 0 // next key-value pair.
+                props[name] = value
+                // from start
+                name = ''
+                value = ''
+            } else {
+                value += char
+            }
+        }
+        i ++
+    }
+    return props
+}
+
+function parseTextNode(textStr) {
+    // "v djfnfgfmfgkhfgjkh&lt;&lt;    \n\n\n",
+    // sparate bindings and constants by {{}}
+    // should `\n` or `\t` be in consideration ?
+    if (!textStr) return null
+    const removedBlanks = textStr.split(/[\n\t\s]/).filter(i => !!i).join(' ')
+    return removedBlanks
+        .replace(/{{/g, '\u0001{{')
+        .replace(/}}/g, '}}\u0001')
+        .split(/\u0001/)
+        .map(item => {
+            if (/^{{\w+}}$/.test(item)) {
+                const element = createElement('Text', 2)
+                element.props = {
+                    ':value': item.substr(2, item.length - 4)
+                }
+                delete element.__attrs
+                return element
+            } else {
+                return item
+            }
+        })
 }
 
 compile(path.resolve(__dirname, './tpl.html'))
