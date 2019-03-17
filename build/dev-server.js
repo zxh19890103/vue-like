@@ -14,7 +14,7 @@ const server = new webpackDevServer(compiler, {
   stats: {
     colors: true
   },
-  quiet: false,
+  quiet: true,
   open: true,
 })
 server.listen(cfg.port, cfg.host, () => {

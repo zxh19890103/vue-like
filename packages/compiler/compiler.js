@@ -54,7 +54,7 @@ const stack = {
     }
 }
 
-function compile(filepath) {
+function compile_x(filepath, done) {
     const stream = fs.createReadStream(filepath, {
         encoding: 'utf8',
         autoClose: true
@@ -63,7 +63,7 @@ function compile(filepath) {
         main(stream)
     })
     stream.on('end', () => {
-        console.log('---READ END---')
+        // console.log('---READ END---')
         reader.setStream(null)
         // write json data into file.
         const root = stack.pick()
@@ -71,13 +71,27 @@ function compile(filepath) {
             throw new Error('Template is not in right syntax.')
         }
         clean(root)
-        fs.writeFile(
-            path.resolve(__dirname, './output.json'),
-            JSON.stringify(root),
-            () => {
-                console.log('saved!')
-            })
+        done && done(JSON.stringify(root))
+        // fs.writeFile(
+        //     path.resolve(__dirname, './output.json'),
+        //     JSON.stringify(root),
+        //     () => {
+        //         console.log('saved!')
+        //     })
     })
+}
+
+function compile(content, done) {
+    stack.init()
+    reader.setString(content)
+    loop()
+    const root = stack.pick()
+    if (root.type !== 3) {
+        throw new Error('Template is not in right syntax.')
+    }
+    clean(root)
+    reader.resetPointer()
+    done && done(JSON.stringify(root))
 }
 
 function clean(node) {
@@ -292,4 +306,6 @@ function parseTextNode(textStr) {
         })
 }
 
-compile(path.resolve(__dirname, './tpl.html'))
+// compile(path.resolve(__dirname, './tpl.html'))
+
+module.exports = compile

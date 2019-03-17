@@ -6,6 +6,7 @@ const ManifestPlugin = require('webpack-manifest-plugin')
 
 const util = require('./util')
 const babelRC = require('./babelrc')
+const tplLoader = path.resolve(__dirname, './template-loader.js')
 
 module.exports = {
   context: util.resolve(),
@@ -22,7 +23,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.ts?$/,
         use: [
           {
             loader: 'cache-loader'
@@ -40,6 +41,10 @@ module.exports = {
           }
         ],
         exclude: /node_modules/
+      },
+      {
+        test: /\.template\.html$/,
+        loader: tplLoader
       },
       {
         test: /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/,

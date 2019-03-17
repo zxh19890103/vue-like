@@ -1,2 +1,6 @@
 export * from './Component'
 export * from './built-in'
+export * from './Tpl.decorator'
+export * from './Reg.decorator'
+export * from './Registery'
+export * from './Tree'

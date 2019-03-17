@@ -2,12 +2,23 @@ const util = require('./util')
 const enums = require('./enums')
 
 let stream = null
+let string = null
 let lastChar = null
 let currentChar = null
+let pointer = 0
 
 function readChar() {
-    lastChar = currentChar
-    currentChar = stream.read(1)
+    if (stream) {
+        lastChar = currentChar
+        currentChar = stream.read(1)
+    } else if (string) {
+        lastChar = currentChar
+        currentChar = string[pointer]
+        if (currentChar === undefined) {
+            currentChar = null
+        }
+        pointer ++
+    }
 }
 
 function readCloseTagName() {
@@ -130,8 +141,18 @@ function setStream(_stream) {
     stream = _stream
 }
 
+function setString(str) {
+    string = str
+}
+
+function resetPointer() {
+    pointer = 0
+}
+
 module.exports = {
     setStream,
+    setString,
+    resetPointer,
     readChar,
     readBeginTagName,
     readCloseTagName,

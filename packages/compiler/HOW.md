@@ -6,4 +6,4 @@
 5. https://en.wikipedia.org/wiki/Well-formed_element
 6. <后边必须为[AZaz]+, 或者 /
 
-## 配合 rxjs 实现数据绑定
+## Renderer

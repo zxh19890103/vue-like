@@ -1,5 +1,5 @@
 {
     "compilerOptions": {
-       "jsx": "preserve",
+        "experimentalDecorators": true
     }
 }
