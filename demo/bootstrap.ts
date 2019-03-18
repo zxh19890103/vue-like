@@ -1,13 +1,13 @@
 import {
-    renderComponent
+    render,
+    mount
 } from '../packages/renderer'
-import './app'
+import {
+    AppComponent
+} from './app'
 
-const fiberRoot = renderComponent({
-    tag: 'App',
-    type: 2,
-    children: null,
-    props: null
-})
+const fiberRoot = render(new AppComponent(null, null), document.querySelector('#App'))
 
 console.log(fiberRoot)
+
+mount(fiberRoot)

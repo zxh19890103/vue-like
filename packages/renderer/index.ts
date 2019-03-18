@@ -1,25 +1,35 @@
 import {
     getComponent,
     Tree,
-    TreeChild
+    TreeChild,
+    Component
 } from '../core'
 
-interface Fiber {
-    tree: TreeChild,
-    stateNode: any
-    child: Fiber
-    sibling: Fiber
-    return: Fiber
+import {
+    FiberNode,
+    createFiberFromTreeChild,
+    createFiberRoot
+} from './fiber'
+
+const render = (app: Component, hostElement: Element) => {
+    const fiberRoot = createFiberRoot(hostElement)
+    const tree = app.render() as Tree
+    renderChildren(tree.children, fiberRoot)
+    return fiberRoot
 }
 
 const renderComponent = (tree: Tree) => {
+    console.log(tree)
     const fiber = createFiberFromTreeChild(tree)
     const ctor = getComponent(tree.tag)
     const instance = new ctor(tree.props, tree.children)
+    console.log(instance)
     fiber.stateNode = instance
     const subTree = instance.render()
     if (typeof subTree === 'string') {
-        renderString(subTree)
+        const child = renderString(subTree)
+        fiber.child = child
+        child.return = fiber
     } else if (subTree instanceof Array) {
         renderChildren(subTree, fiber)
     } else if (subTree === null) {
@@ -37,7 +47,7 @@ const renderHost = (tree: Tree) => {
     return fiber
 }
 
-const renderChildren = (children: Array<TreeChild>, fiber: Fiber) => {
+const renderChildren = (children: Array<TreeChild>, fiber: FiberNode) => {
     if (children === null) return
     fiber.child = children.map(child => {
         if (typeof child === 'string') {
@@ -66,16 +76,8 @@ const renderString = (str: string) => {
     return fiber
 }
 
-const createFiberFromTreeChild = (tree: TreeChild) : Fiber => {
-    return {
-        tree,
-        stateNode: null,
-        child: null,
-        return: null,
-        sibling: null
-    }
+export {
+    render
 }
 
-export {
-    renderComponent
-}
+export * from './dom'

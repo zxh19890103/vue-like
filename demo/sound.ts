@@ -5,8 +5,10 @@ import {
 } from '../packages/core'
 
 @Reg('Sound')
-@Tpl(require('./sound.template.html'))
-class SoundComponent extends Component {    
+class SoundComponent extends Component {
+    render() {
+        return this.slots
+    }
 }
 export {
     SoundComponent
