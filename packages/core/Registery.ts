@@ -5,7 +5,6 @@ const register = (key: string, type: any) => {
 }
 
 const get = (key: string): any => {
-    console.log(map)
     return map.get(key)
 }
 
