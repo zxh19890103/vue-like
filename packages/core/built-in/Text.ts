@@ -8,6 +8,6 @@ export class TextComponent extends Component {
     }
     
     render() {
-        return ''
+        return this.props[':value']
     }
 }

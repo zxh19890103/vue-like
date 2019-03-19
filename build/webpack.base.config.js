@@ -6,7 +6,7 @@ const ManifestPlugin = require('webpack-manifest-plugin')
 
 const util = require('./util')
 const babelRC = require('./babelrc')
-const tplLoader = path.resolve(__dirname, './template-loader.js')
+const tplLoader = path.resolve(__dirname, '../packages/compiler/template-loader.js')
 
 module.exports = {
   context: util.resolve(),
