@@ -15,7 +15,6 @@ const render = (app: Component, hostElement: Element) => {
     const fiberRoot = createFiberRoot(app, hostElement)
     const tree = app.render() as Tree
     renderChildren(tree.children, fiberRoot, app)
-    // connect component instances
     return fiberRoot
 }
 
@@ -23,9 +22,9 @@ const renderComponent = (tree: Tree, parent: Component) => {
     const fiber = createFiberFromTreeChild(tree)
     const ctor = getComponent(tree.tag)
     const instance = new ctor(tree.props, tree.children) as Component
-    console.log(instance)
     instance.parent = parent
     fiber.stateNode = instance
+    instance.created()
     const subTree = instance.render()
     if (typeof subTree === 'string') {
         const child = renderString(subTree)

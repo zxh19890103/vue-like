@@ -293,7 +293,7 @@ function parseTextNode(textStr) {
         .replace(/}}/g, '}}\u0001')
         .split(/\u0001/)
         .map(item => {
-            if (/^{{\w+}}$/.test(item)) {
+            if (/^{{[\w\.]+}}$/.test(item)) {
                 const element = createElement('Text', 2)
                 element.props = {
                     ':value': item.substr(2, item.length - 4)
@@ -305,7 +305,5 @@ function parseTextNode(textStr) {
             }
         })
 }
-
-// compile(path.resolve(__dirname, './tpl.html'))
 
 module.exports = compile

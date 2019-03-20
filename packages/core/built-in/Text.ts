@@ -8,6 +8,10 @@ export class TextComponent extends Component {
     }
     
     render() {
-        return this.props[':value']
+        console.log(this.props)
+        // const key = this.props[':value']
+        // console.log('>>', this.parent)
+        // const value = this.parent[key]
+        return String(this.props['value'])
     }
 }
