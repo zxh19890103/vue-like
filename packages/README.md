@@ -1,7 +1,25 @@
-## 基于Fiber结构和RXjs的类Vue框架
+### 基于Fiber结构和RXjs的类Vue框架
 
-### compiler 会将HTML模板转换为JS对象表达，搭配webpack，写了一个loader
+#### 目的
+```
+尝试应用流行前端框架的几项设计理念与RXJS设计一个前端框架：
+1. 虚拟DOM
+2. Fiber架构
+3. 数据劫持的响应机制
+```
 
-### core 基础类定义
+#### 设计
+```
+思路很简单，主要有以下几条：
+1. 将组件的HTML模板编译为JSON数据描述
+2. 递归解析JSON数据，创建Fiber结构，创建组件实例，保存应用状态
+3. 挂在DOM元素
+3. RXJS让组件的属性改动变得可响应，以更新DOM
+```
 
-### renderer 根据 compiler 生成的json表达，递归地生成Fiber结构（类似React的Fiber设计），并创建实例（组件、DOM），然后挂载至页面
+#### 三个目录
+```
+1. compiler 配合webpack，用于加载并编译组件的模板
+2. core 定义了组件的基础类
+3. renderer 用于构建Fiber结构，创建并维护组件实例，挂载DOM
+```
