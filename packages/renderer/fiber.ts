@@ -1,5 +1,5 @@
 import {
-    TreeChild
+    TreeChild, Component
 } from '../core'
 
 export interface FiberNode {
@@ -23,14 +23,23 @@ const createFiberFromTreeChild = (tree: TreeChild) : FiberNode => {
     }
 }
 
-const createFiberRoot = (element: Element) : FiberNode => {
-    return {
+const createFiberRoot = (app: Component, element: Element) : FiberNode => {
+    const rootFiber: FiberNode = {
         type: 1,
         stateNode: element,
         child: null,
         return: null,
         sibling: null
     }
+    const appFiber: FiberNode = {
+        type: 2,
+        stateNode: app,
+        child: null,
+        return: rootFiber,
+        sibling: null
+    }
+    rootFiber.child = appFiber
+    return appFiber
 }
 
 export {

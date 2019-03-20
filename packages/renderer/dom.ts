@@ -7,9 +7,7 @@ let nextFiber: FiberNode = null
 
 const mount = (root: FiberNode) => {
     currentFiber = root
-    let x = 0, y = 0, z = 0
-    while (currentFiber && x < 300) {
-        x ++
+    while (currentFiber) {
         // ## Find nextFiber Begin
         // If there is a child, then set currentFiber to the child.
         findNextFiber()
@@ -21,11 +19,9 @@ const mount = (root: FiberNode) => {
         currentFiber = nextFiber
         nextFiber = null
     }
-    console.log(x, y, z)
 }
 
 const findNextFiber = () => {
-    let z = 0
     if (currentFiber.child !== null) {
         nextFiber = currentFiber.child
         return
@@ -35,8 +31,7 @@ const findNextFiber = () => {
         return
     }
     nextFiber = currentFiber.return
-    while (nextFiber && z < 300) {
-        z ++
+    while (nextFiber) {
         if (nextFiber.sibling !== null) {
             nextFiber = nextFiber.sibling
             break

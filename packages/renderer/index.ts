@@ -12,18 +12,19 @@ import {
 } from './fiber'
 
 const render = (app: Component, hostElement: Element) => {
-    const fiberRoot = createFiberRoot(hostElement)
+    const fiberRoot = createFiberRoot(app, hostElement)
     const tree = app.render() as Tree
-    renderChildren(tree.children, fiberRoot)
+    renderChildren(tree.children, fiberRoot, app)
+    // connect component instances
     return fiberRoot
 }
 
-const renderComponent = (tree: Tree) => {
-    console.log(tree)
+const renderComponent = (tree: Tree, parent: Component) => {
     const fiber = createFiberFromTreeChild(tree)
     const ctor = getComponent(tree.tag)
-    const instance = new ctor(tree.props, tree.children)
+    const instance = new ctor(tree.props, tree.children) as Component
     console.log(instance)
+    instance.parent = parent
     fiber.stateNode = instance
     const subTree = instance.render()
     if (typeof subTree === 'string') {
@@ -31,23 +32,23 @@ const renderComponent = (tree: Tree) => {
         fiber.child = child
         child.return = fiber
     } else if (subTree instanceof Array) {
-        renderChildren(subTree, fiber)
+        renderChildren(subTree, fiber, instance)
     } else if (subTree === null) {
     } else {
-        renderChildren(subTree.children, fiber)
+        renderChildren(subTree.children, fiber, instance)
     }
     return fiber
 }
 
-const renderHost = (tree: Tree) => {
+const renderHost = (tree: Tree, parentComponent: Component) => {
     const fiber = createFiberFromTreeChild(tree)
     const element = document.createElement(tree.tag)
     fiber.stateNode = element
-    renderChildren(tree.children, fiber)
+    renderChildren(tree.children, fiber, parentComponent)
     return fiber
 }
 
-const renderChildren = (children: Array<TreeChild>, fiber: FiberNode) => {
+const renderChildren = (children: Array<TreeChild>, fiber: FiberNode, parent: Component) => {
     if (children === null) return
     fiber.child = children.map(child => {
         if (typeof child === 'string') {
@@ -55,10 +56,10 @@ const renderChildren = (children: Array<TreeChild>, fiber: FiberNode) => {
         } else {
             switch (child.type) {
                 case 1:
-                    return renderHost(child)
+                    return renderHost(child, parent)
                 case 2:
                 case 3:
-                    return renderComponent(child)
+                    return renderComponent(child, parent)
                 default:
                     throw new Error('Type only 1,2,3 are allowed.')
             }
