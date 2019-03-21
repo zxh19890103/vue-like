@@ -1,14 +1,18 @@
-import {
-    render,
-    mount
-} from '../packages/renderer'
-import {
-    AppComponent
-} from './app'
-const app = new AppComponent(null, null)
+// import {
+//     render,
+//     mount
+// } from '../packages/renderer'
+// import {
+//     AppComponent
+// } from './app'
+// const app = new AppComponent(null, null)
 
-const fiberRoot = render(app, document.querySelector('#App'))
+// const fiberRoot = render(app, document.querySelector('#App'))
 
-console.log(fiberRoot)
+// console.log(fiberRoot)
 
-mount(fiberRoot)
+// mount(fiberRoot)
+
+function drawPie(location) {
+    
+}
