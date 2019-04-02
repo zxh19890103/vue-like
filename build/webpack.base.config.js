@@ -7,15 +7,14 @@ const ManifestPlugin = require('webpack-manifest-plugin')
 const util = require('./util')
 const babelRC = require('./babelrc')
 const tplLoader = path.resolve(__dirname, '../packages/compiler/template-loader.js')
+const conf = require('./config').share
 
 module.exports = {
   context: util.resolve(),
-  entry: {
-    app: './demo/bootstrap'
-  },
+  entry: conf.entry,
   output: {
     filename: "[name].[hash:7].js",
-    path: util.resolve('./dist')
+    path: util.resolve(conf.output)
   },
   resolve: {
     extensions: [ '.js', '.ts', '.tsx' ]
@@ -67,9 +66,9 @@ module.exports = {
     ]
   },
   plugins: [
-    new CleanWebpackPlugin([util.resolve('./dist')]),
+    new CleanWebpackPlugin([util.resolve(conf.output)]),
     new HtmlWebpackPlugin({
-      template: './demo/index.html',
+      template: conf.index,
       filename: 'index.html'
     }),
     new ManifestPlugin()
