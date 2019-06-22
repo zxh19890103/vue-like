@@ -1,1 +1,102 @@
-前两节我们详细介绍了面向对象设计原则中的<a href="http://c.biancheng.net/view/1322.html">开闭原则</a>和<a href="http://c.biancheng.net/view/1324.html">里氏替换原则</a>，在本节中我们来介绍依赖倒置原则。</p><h3>依赖倒置原则的定义</h3><p><span style="color:#006400;">依赖倒置原则（Dependence Inversion Principle，DIP）</span>是 Object Mentor 公司总裁罗伯特&middot;马丁（Robert C.Martin）于 1996 年在 <a href="http://c.biancheng.net/cplus/" target='_blank'>C++</a> Report 上发表的文章。依赖倒置原则的原始定义为：高层模块不应该依赖低层模块，两者都应该依赖其抽象；抽象不应该依赖细节，细节应该依赖抽象（High level modules shouldnot depend upon low level modules.Both should depend upon abstractions.Abstractions should not depend upon details. Details should depend upon abstractions）。其核心思想是：要面向接口编程，不要面向实现编程。<span style="color:#b22222;">依赖倒置原则是实现开闭原则的重要途径之一，它降低了客户与实现模块之间的耦合。</span>由于在软件设计中，细节具有多变性，而抽象层则相对稳定，因此以抽象为基础搭建起来的架构要比以细节为基础搭建起来的架构要稳定得多。这里的抽象指的是接口或者抽象类，而细节是指具体的实现类。使用接口或者抽象类的目的是制定好规范和契约，而不去涉及任何具体的操作，把展现细节的任务交给它们的实现类去完成。</p><h3>依赖、倒置原则的作用</h3><p>依赖倒置原则的主要作用如下。<ul><li>依赖倒置原则可以降低类间的耦合性。</li><li>依赖倒置原则可以提高系统的稳定性。</li><li>依赖倒置原则可以减少并行开发引起的风险。</li><li>依赖倒置原则可以提高代码的可读性和可维护性。</li></ul></p><h3>依赖倒置原则的实现方法</h3><p><span style="color:#b22222;">依赖倒置原则的目的是通过要面向接口的编程来降低类间的耦合性</span>，所以我们在实际编程中只要遵循以下4点，就能在项目中满足这个规则。<ol><li>每个类尽量提供接口或抽象类，或者两者都具备。</li><li>变量的声明类型尽量是接口或者是抽象类。</li><li>任何类都不应该从具体类派生。</li><li>使用继承时尽量遵循里氏替换原则。</li></ol>下面以&ldquo;顾客购物程序&rdquo;为例来说明依赖倒置原则的应用。【例1】依赖倒置原则在&ldquo;顾客购物程序&rdquo;中的应用。分析：本程序反映了 &ldquo;顾客类&rdquo;与&ldquo;商店类&rdquo;的关系。商店类中有 sell() 方法，顾客类通过该方法购物以下代码定义了顾客类通过韶关网店 ShaoguanShop 购物：<pre class="language-cpp"><code>class Customer{    public void shopping(ShaoguanShop shop)    {        //购物        System.out.println（shop.sell());    }}</pre>但是，这种设计存在缺点，如果该顾客想从另外一家商店（如婺源网店 WuyuanShop）购物，就要将该顾客的代码修改如下：<pre class="cpp">class Customer{    public void shopping(WuyuanShop shop)    {        //购物        System.out.println(shop.sell());    }}</pre>顾客每更换一家商店，都要修改一次代码，这明显违背了开闭原则。存在以上缺点的原因是：顾客类设计时同具体的商店类绑定了，这违背了依赖倒置原则。解决方法是：定义&ldquo;婺源网店&rdquo;和&ldquo;韶关网店&rdquo;的共同接口 Shop，顾客类面向该接口编程���其代码修改如下：<pre class="cpp">class Customer{    public void shopping(Shop shop)    {        //购物        System.out.println(shop.sell());    }}</pre>这样，不管顾客类 Customer 访问什么商店，或者增加新的商店，都不需要修改原有代码了，其类图如图 1 所示。<div class="img-container"><img alt="顾客购物程序的类图" src="http://c.biancheng.net/uploads/allimg/181113/3-1Q113131610L7.gif" />图1 顾客购物程序的类图</div>程序代码如下：<pre class="cpp">package principle;public class DIPtest{    public static void main(String[] args)    {        Customer wang=new Customer();        System.out.println(&quot;顾客购买以下商品：&quot;);         wang.shopping(new ShaoguanShop());         wang.shopping(new WuyuanShop());    }}//商店interface Shop{    public String sell(); //卖}//韶关网店class ShaoguanShop implements Shop{    public String sell()    {        return &quot;韶关土特产：香菇、木耳&hellip;&hellip;&quot;;     } }//婺源网店class WuyuanShop implements Shop{    public String sell()    {        return &quot;婺源土特产：绿茶、酒糟鱼&hellip;&hellip;&quot;;     }} //顾客class Customer{    public void shopping(Shop shop)    {        //购物        System.out.println(shop.sell());     }}</pre>程序的运行结果如下：<pre class="info-box">顾客购买以下商品：韶关土特产：香菇、木耳&hellip;&hellip;婺源土特产：绿茶、酒糟鱼&hellip;&hellip;</code></pre>
+前两节我们详细介绍了面向对象设计原则中的<a href="http://c.biancheng.net/view/1322.html">开闭原则</a>和<a
+    href="http://c.biancheng.net/view/1324.html">里氏替换原则</a>，在本节中我们来介绍依赖倒置原则。</p>
+<h3>依赖倒置原则的定义</h3>
+<p><span style="color:#006400;">依赖倒置原则（Dependence Inversion Principle，DIP）</span>是 Object Mentor
+    公司总裁罗伯特&middot;马丁（Robert C.Martin）于 1996 年在 <a href="http://c.biancheng.net/cplus/" target='_blank'>C++</a> Report
+    上发表的文章。依赖倒置原则的原始定义为：高层模块不应该依赖低层模块，两者都应该依赖其抽象；抽象不应该依赖细节，细节应该依赖抽象（High level modules shouldnot depend upon low level
+    modules.Both should depend upon abstractions.Abstractions should not depend upon details. Details should depend upon
+    abstractions）。其核心思想是：要面向接口编程，不要面向实现编程。<span
+        style="color:#b22222;">依赖倒置原则是实现开闭原则的重要途径之一，它降低了客户与实现模块之间的耦合。</span>由于在软件设计中，细节具有多变性，而抽象层则相对稳定，因此以抽象为基础搭建起来的架构要比以细节为基础搭建起来的架构要稳定得多。这里的抽象指的是接口或者抽象类，而细节是指具体的实现类。使用接口或者抽象类的目的是制定好规范和契约，而不去涉及任何具体的操作，把展现细节的任务交给它们的实现类去完成。
+</p>
+<h3>依赖、倒置原则的作用</h3>
+<p>依赖倒置原则的主要作用如下。<ul>
+        <li>依赖倒置原则可以降低类间的耦合性。</li>
+        <li>依赖倒置原则可以提高系统的稳定性。</li>
+        <li>依赖倒置原则可以减少并行开发引起的风险。</li>
+        <li>依赖倒置原则可以提高代码的可读性和可维护性。</li>
+    </ul>
+</p>
+<h3>依赖倒置原则的实现方法</h3>
+<p><span style="color:#b22222;">依赖倒置原则的目的是通过要面向接口的编程来降低类间的耦合性</span>，所以我们在实际编程中只要遵循以下4点，就能在项目中满足这个规则。<ol>
+        <li>每个类尽量提供接口或抽象类，或者两者都具备。</li>
+        <li>变量的声明类型尽量是接口或者是抽象类。</li>
+        <li>任何类都不应该从具体类派生。</li>
+        <li>使用继承时尽量遵循里氏替换原则。</li>
+    </ol>下面以&ldquo;顾客购物程序&rdquo;为例来说明依赖倒置原则的应用。【例1】依赖倒置原则在&ldquo;顾客购物程序&rdquo;中的应用。分析：本程序反映了
+    &ldquo;顾客类&rdquo;与&ldquo;商店类&rdquo;的关系。商店类中有 sell() 方法，顾客类通过该方法购物以下代码定义了顾客类通过韶关网店 ShaoguanShop 购物：
+    <pre class="language-cpp"><code>
+class Customer
+{
+    public void shopping(ShaoguanShop shop)
+    {
+        //购物
+        System.out.println（shop.sell());
+    }
+}</pre>但是，这种设计存在缺点，如果该顾客想从另外一家商店（如婺源网店 WuyuanShop）购物，就要将该顾客的代码修改如下：
+    <pre class="cpp">
+class Customer
+{
+    public void shopping(WuyuanShop shop)
+    {
+        //购物
+        System.out.println(shop.sell());
+    }
+}</pre>
+    顾客每更换一家商店，都要修改一次代码，这明显违背了开闭原则。存在以上缺点的原因是：顾客类设计时同具体的商店类绑定了，这违背了依赖倒置原则。解决方法是：定义&ldquo;婺源网店&rdquo;和&ldquo;韶关网店&rdquo;的共同接口
+    Shop，顾客类面向该接口编程���其代码修改如下：
+    <pre class="cpp">
+class Customer
+{
+    public void shopping(Shop shop)
+    {
+        //购物
+        System.out.println(shop.sell());
+    }
+}</pre>这样，不管顾客类 Customer 访问什么商店，或者增加新的商店，都不需要修改原有代码了，其类图如图 1 所示。<div class="img-container"><img alt="顾客购物程序的类图"
+            src="http://c.biancheng.net/uploads/allimg/181113/3-1Q113131610L7.gif" />图1 顾客购物程序的类图</div>程序代码如下：
+    <pre class="cpp">
+package principle;
+public class DIPtest
+{
+    public static void main(String[] args)
+    {
+        Customer wang=new Customer();
+        System.out.println(&quot;顾客购买以下商品：&quot;); 
+        wang.shopping(new ShaoguanShop()); 
+        wang.shopping(new WuyuanShop());
+    }
+}
+//商店
+interface Shop
+{
+    public String sell(); //卖
+}
+//韶关网店
+class ShaoguanShop implements Shop
+{
+    public String sell()
+    {
+        return &quot;韶关土特产：香菇、木耳&hellip;&hellip;&quot;; 
+    } 
+}
+//婺源网店
+class WuyuanShop implements Shop
+{
+    public String sell()
+    {
+        return &quot;婺源土特产：绿茶、酒糟鱼&hellip;&hellip;&quot;; 
+    }
+} 
+//顾客
+class Customer
+{
+    public void shopping(Shop shop)
+    {
+        //购物
+        System.out.println(shop.sell()); 
+    }
+}</code></pre>程序的运行结果如下：
+    <pre class="info-box">
+顾客购买以下商品：
+韶关土特产：香菇、木耳&hellip;&hellip;
+婺源土特产：绿茶、酒糟鱼&hellip;&hellip;</pre>
