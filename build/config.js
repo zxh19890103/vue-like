@@ -1,11 +1,11 @@
 module.exports ={
   share: {
-    index: './sw/index.html',
+    index: './demo/index.html',
     entry: {
-      app: './sw/index.js'
+      app: './demo/bootstrap.ts'
     },
-    assets: ['./sw/assets'],
-    output: './sw/dist'
+    assets: [],
+    output: './demo/dist'
   },
   dev: {
     port: 9003,
